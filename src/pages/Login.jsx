@@ -1,28 +1,75 @@
-import React, { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
-import { useAuth } from "../context/AuthContext"
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 function Login() {
-  const [username, setUsername] = useState("")
-  const navigate = useNavigate()
-  const { login } = useAuth()
+  const [username, setUsername] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  useEffect(() => {
+    const telegram = window.Telegram.WebApp;
     try {
-      await login(username)
-      navigate("/profile")
+      if (telegram.initDataUnsafe && telegram.initDataUnsafe.user) {
+        const telegramUsername = telegram.initDataUnsafe.user.username;
+        setUsername(telegramUsername);
+        handleLogin(telegramUsername);
+      } else {
+        setError("No Telegram user data found");
+      }
+    } catch (err) {
+      setError("Failed to get Telegram data");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleLogin = async (username) => {
+    try {
+      await login(username);
+      navigate("/profile");
     } catch (error) {
-      console.error("Login failed:", error)
+      console.error("Login failed:", error);
       // Handle login error (e.g., show error message)
     }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await login(username);
+      navigate("/profile");
+    } catch (error) {
+      console.error("Login failed:", error);
+      // Handle login error (e.g., show error message)
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        Loading...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        Error : {error}
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Sign in to your account</h2>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Sign in to your account
+          </h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <input type="hidden" name="remember" defaultValue="true" />
@@ -54,19 +101,24 @@ function Login() {
           </div>
         </form>
         <div className="text-center">
-          <Link to="/register" className="font-medium text-purple-600 hover:text-purple-500">
+          <Link
+            to="/register"
+            className="font-medium text-purple-600 hover:text-purple-500"
+          >
             Don't have an account? Register
           </Link>
         </div>
         <div className="text-center">
-          <Link to="/admin-login" className="font-medium text-gray-600 hover:text-gray-500">
+          <Link
+            to="/admin-login"
+            className="font-medium text-gray-600 hover:text-gray-500"
+          >
             Admin Login
           </Link>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default Login
-
+export default Login;
