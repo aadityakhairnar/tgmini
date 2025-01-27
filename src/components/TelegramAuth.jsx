@@ -1,34 +1,27 @@
-import React, { useEffect } from "react"
-import { useAuth } from "../context/AuthContext"
+import React, { useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
-const TelegramAuth = () => {
-  const { loginWithTelegram } = useAuth()
+function TelegramAuth() {
+  const { login, register } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const script = document.createElement("script")
-    script.src = "https://telegram.org/js/telegram-widget.js?22"
-    script.setAttribute("data-telegram-login", process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME)
-    script.setAttribute("data-size", "large")
-    script.setAttribute("data-onauth", "onTelegramAuth(user)")
-    script.setAttribute("data-request-access", "write")
-    script.async = true
-    document.body.appendChild(script)
-
-    window.onTelegramAuth = (user) => {
-      loginWithTelegram(user)
+    const telegram = window.Telegram.WebApp;
+    
+    if (telegram.initDataUnsafe && telegram.initDataUnsafe.user) {
+      const { username } = telegram.initDataUnsafe.user;
+      
+      // Try to login first, if it fails, try to register
+      login(username).catch(() => {
+        register(username);
+      }).then(() => {
+        navigate('/profile');
+      });
     }
+  }, []);
 
-    return () => {
-      document.body.removeChild(script)
-    }
-  }, [loginWithTelegram])
-
-  return (
-    <div id="telegram-login-container" className="flex justify-center my-4">
-      {/* Telegram Login Button will be rendered here */}
-    </div>
-  )
+  return null; // This component doesn't render anything
 }
 
-export default TelegramAuth
-
+export default TelegramAuth;
