@@ -15,7 +15,7 @@ function Login() {
       if (telegram.initDataUnsafe && telegram.initDataUnsafe.user) {
         const telegramUsername = telegram.initDataUnsafe.user.username;
         setUsername(telegramUsername);
-        handleLogin(telegramUsername);
+        handleSubmit();
       } else {
         setError("No Telegram user data found");
       }
